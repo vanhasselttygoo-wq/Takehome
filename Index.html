@@ -1,394 +1,279 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<title>notepad</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Cybersecurity Matrix Quiz — with Rain</title>
+  <style>
+    :root {
+      --bg:#000000;
+      --panel:#0a0a0a;
+      --accent:#00ff66;
+      --accent2:#00cc44;
+      --good:#00ff99;
+      --bad:#ff3333;
+      --text:#ccffcc;
+      --muted:#44aa66;
+      --ok:#ccff33;
+    }
+    * {box-sizing:border-box; font-family:'Consolas','Courier New',monospace;}
+    html,body {height:100%;margin:0;padding:0;background:#000;}
+    body {
+      background:radial-gradient(circle at top left, #001a00, #000);
+      color:var(--text);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      min-height:100vh;
+      padding:30px;
+      position:relative;
+      overflow-x:hidden;
+    }
+
+    #matrixCanvas {
+      position:fixed;
+      inset:0;
+      z-index:0;
+      pointer-events:none;
+      mix-blend-mode:screen;
+      opacity:0.85;
+    }
+
+    .app {
+      position:relative;
+      z-index:10;
+      max-width:700px;
+      width:100%;
+      background:rgba(0,0,0,0.45);
+      padding:24px;
+      border-radius:16px;
+      box-shadow:0 0 25px rgba(0,255,100,0.06);
+      backdrop-filter: blur(6px);
+      border:1px solid rgba(0,255,80,0.06);
+    }
+
+    h1 {
+      color:var(--accent);
+      margin-bottom:10px;
+      text-align:center;
+      text-shadow:0 0 15px var(--accent);
+      letter-spacing:1px;
+    }
+
+    .progress-section{text-align:center;margin-top:10px;}
+    .progress-text{color:var(--muted);font-size:0.9rem;margin-bottom:4px;}
+    .progress-container {
+      width:100%;
+      background:rgba(0,255,100,0.06);
+      border-radius:10px;
+      height:10px;
+      overflow:hidden;
+    }
+    .progress-bar {
+      height:10px;width:0;
+      background:linear-gradient(90deg,var(--accent2),var(--accent));
+      transition:width 0.4s ease;
+      box-shadow:0 0 10px var(--accent);
+    }
+    .question {
+      font-weight:700;font-size:1.15rem;margin:16px 0;
+      color:var(--accent);
+      text-shadow:0 0 6px rgba(0,255,102,0.08);
+    }
+    .choices{display:flex;gap:10px;margin-top:8px;}
+    .btn {
+      flex:1;padding:12px;border:none;border-radius:10px;font-weight:700;
+      cursor:pointer;background:rgba(0,255,80,0.03);color:var(--text);transition:all 0.16s;
+      border:1px solid rgba(0,255,100,0.06);
+    }
+    .btn:hover {background:var(--accent);color:#000;transform:translateY(-2px);box-shadow:0 0 10px var(--accent);}
+    .primary {background:linear-gradient(90deg,var(--accent),var(--accent2));color:#000;font-weight:900;box-shadow:0 0 14px rgba(0,255,80,0.5);}
+    .feedback {margin-top:14px;min-height:24px;font-weight:600;}
+    .correct {color:var(--good);}
+    .wrong {color:var(--bad);}
+    .footer{text-align:center;margin-top:20px;color:var(--muted);font-size:0.9rem;}
+    input{width:100%;padding:8px;border-radius:8px;border:1px solid var(--accent);background:rgba(0,255,80,0.02);color:var(--text);}
+    .hidden{display:none;}
+    #summary{display:none;text-align:center;margin-top:20px;}
+    #summary h2{color:var(--accent);text-shadow:0 0 10px var(--accent);}
+    #rating{font-size:1.05rem;margin-top:8px;font-weight:bold;}
+    .excellent{color:var(--good);}
+    .good{color:var(--ok);}
+    .tryagain{color:var(--bad);}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);opacity:1;}}
+    .fade-in{animation:fadeIn 0.6s ease-in;}
+    @media (max-width:520px){
+      .app{padding:16px;border-radius:12px;}
+      .question{font-size:1rem;}
+    }
+  </style>
 </head>
-<style type="text/css">
-ol,ul{
-display:block;
-list-style-type:none;
-margin:3px;
-}
-</style><body>
-<div>&lt;!DOCTYPE html&gt;<br>
-&lt;html lang="en"&gt;<br>
-&lt;head&gt;<br>
-&lt;meta charset="utf-8" /&gt;<br>
-&lt;meta name="viewport" content="width=device-width,initial-scale=1" /&gt;<br>
-&lt;title&gt;Cybersecurity Matrix Quiz &#8212; with Rain&lt;/title&gt;<br>
-&lt;style&gt;<br>
-&nbsp; :root{<br>
-&nbsp;&nbsp;&nbsp; --bg:#000000;<br>
-&nbsp;&nbsp;&nbsp; --panel:#0a0a0a;<br>
-&nbsp;&nbsp;&nbsp; --accent:#00ff66;<br>
-&nbsp;&nbsp;&nbsp; --accent2:#00cc44;<br>
-&nbsp;&nbsp;&nbsp; --good:#00ff99;<br>
-&nbsp;&nbsp;&nbsp; --bad:#ff3333;<br>
-&nbsp;&nbsp;&nbsp; --text:#ccffcc;<br>
-&nbsp;&nbsp;&nbsp; --muted:#44aa66;<br>
-&nbsp;&nbsp;&nbsp; --ok:#ccff33;<br>
-&nbsp; }<br>
-&nbsp; *{box-sizing:border-box;font-family:'Consolas','Courier New',monospace;}<br>
-&nbsp; html,body{height:100%;margin:0;padding:0;background:#000;}<br>
-&nbsp; body{<br>
-&nbsp;&nbsp;&nbsp; background:radial-gradient(circle at top left, #001a00, #000);<br>
-&nbsp;&nbsp;&nbsp; color:var(--text);<br>
-&nbsp;&nbsp;&nbsp; display:flex;<br>
-&nbsp;&nbsp;&nbsp; flex-direction:column;<br>
-&nbsp;&nbsp;&nbsp; align-items:center;<br>
-&nbsp;&nbsp;&nbsp; min-height:100vh;<br>
-&nbsp;&nbsp;&nbsp; padding:30px;<br>
-&nbsp;&nbsp;&nbsp; position:relative;<br>
-&nbsp;&nbsp;&nbsp; overflow-x:hidden;<br>
-&nbsp; }<br>
-<br>
-&nbsp; /* Canvas overlay sits above everything but doesn't block clicks */<br>
-&nbsp; #matrixCanvas{<br>
-&nbsp;&nbsp;&nbsp; position:fixed;<br>
-&nbsp;&nbsp;&nbsp; inset:0;<br>
-&nbsp;&nbsp;&nbsp; z-index:9999; /* above UI so rain falls over the quiz */<br>
-&nbsp;&nbsp;&nbsp; pointer-events:none; /* keep UI interactive */<br>
-&nbsp;&nbsp;&nbsp; mix-blend-mode:screen;<br>
-&nbsp;&nbsp;&nbsp; opacity:0.85; /* adjust overall visibility of the rain */<br>
-&nbsp; }<br>
-<br>
-&nbsp; .app{<br>
-&nbsp;&nbsp;&nbsp; position:relative;<br>
-&nbsp;&nbsp;&nbsp; z-index:10000; /* keep app interactive above background but below canvas visuals if you want; canvas is above for rain */<br>
-&nbsp;&nbsp;&nbsp; max-width:700px;width:100%;<br>
-&nbsp;&nbsp;&nbsp; background:rgba(0,0,0,0.45);<br>
-&nbsp;&nbsp;&nbsp; padding:24px;<br>
-&nbsp;&nbsp;&nbsp; border-radius:16px;<br>
-&nbsp;&nbsp;&nbsp; box-shadow:0 0 25px rgba(0,255,100,0.06);<br>
-&nbsp;&nbsp;&nbsp; backdrop-filter: blur(6px);<br>
-&nbsp;&nbsp;&nbsp; border:1px solid rgba(0,255,80,0.06);<br>
-&nbsp; }<br>
-<br>
-&nbsp; h1{<br>
-&nbsp;&nbsp;&nbsp; color:var(--accent);<br>
-&nbsp;&nbsp;&nbsp; margin-bottom:10px;<br>
-&nbsp;&nbsp;&nbsp; text-align:center;<br>
-&nbsp;&nbsp;&nbsp; text-shadow:0 0 15px var(--accent);<br>
-&nbsp;&nbsp;&nbsp; letter-spacing:1px;<br>
-&nbsp; }<br>
-<br>
-&nbsp; .progress-section{text-align:center;margin-top:10px;}<br>
-&nbsp; .progress-text{color:var(--muted);font-size:0.9rem;margin-bottom:4px;}<br>
-&nbsp; .progress-container{<br>
-&nbsp;&nbsp;&nbsp; width:100%;<br>
-&nbsp;&nbsp;&nbsp; background:rgba(0,255,100,0.06);<br>
-&nbsp;&nbsp;&nbsp; border-radius:10px;<br>
-&nbsp;&nbsp;&nbsp; height:10px;<br>
-&nbsp;&nbsp;&nbsp; overflow:hidden;<br>
-&nbsp; }<br>
-&nbsp; .progress-bar{<br>
-&nbsp;&nbsp;&nbsp; height:10px;width:0;<br>
-&nbsp;&nbsp;&nbsp; background:linear-gradient(90deg,var(--accent2),var(--accent));<br>
-&nbsp;&nbsp;&nbsp; transition:width 0.4s ease;<br>
-&nbsp;&nbsp;&nbsp; box-shadow:0 0 10px var(--accent);<br>
-&nbsp; }<br>
-&nbsp; .question{<br>
-&nbsp;&nbsp;&nbsp; font-weight:700;font-size:1.15rem;margin:16px 0;<br>
-&nbsp;&nbsp;&nbsp; color:var(--accent);<br>
-&nbsp;&nbsp;&nbsp; text-shadow:0 0 6px rgba(0,255,102,0.08);<br>
-&nbsp; }<br>
-&nbsp; .choices{display:flex;gap:10px;margin-top:8px;}<br>
-&nbsp; .btn{<br>
-&nbsp;&nbsp;&nbsp; flex:1;padding:12px;border:none;border-radius:10px;font-weight:700;<br>
-&nbsp;&nbsp;&nbsp; cursor:pointer;background:rgba(0,255,80,0.03);color:var(--text);transition:all 0.16s;<br>
-&nbsp;&nbsp;&nbsp; border:1px solid rgba(0,255,100,0.06);<br>
-&nbsp; }<br>
-&nbsp; .btn:hover{background:var(--accent);color:#000;transform:translateY(-2px);box-shadow:0 0 10px var(--accent);}<br>
-&nbsp; .primary{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#000;font-weight:900;box-shadow:0 0 14px rgba(0,255,80,0.5);}<br>
-&nbsp; .feedback{margin-top:14px;min-height:24px;font-weight:600;}<br>
-&nbsp; .correct{color:var(--good);}<br>
-&nbsp; .wrong{color:var(--bad);}<br>
-&nbsp; .footer{text-align:center;margin-top:20px;color:var(--muted);font-size:0.9rem;}<br>
-&nbsp; input{width:100%;padding:8px;border-radius:8px;border:1px solid var(--accent);background:rgba(0,255,80,0.02);color:var(--text);}<br>
-&nbsp; .hidden{display:none;}<br>
-&nbsp; #summary{display:none;text-align:center;margin-top:20px;}<br>
-&nbsp; #summary h2{color:var(--accent);text-shadow:0 0 10px var(--accent);}<br>
-&nbsp; #rating{font-size:1.05rem;margin-top:8px;font-weight:bold;}<br>
-&nbsp; .excellent{color:var(--good);}<br>
-&nbsp; .good{color:var(--ok);}<br>
-&nbsp; .tryagain{color:var(--bad);}<br>
-<br>
-&nbsp; @keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);opacity:1;}}<br>
-&nbsp; .fade-in{animation:fadeIn 0.6s ease-in;}<br>
-&nbsp; /* small responsiveness */<br>
-&nbsp; @media (max-width:520px){<br>
-&nbsp;&nbsp;&nbsp; .app{padding:16px;border-radius:12px;}<br>
-&nbsp;&nbsp;&nbsp; .question{font-size:1rem;}<br>
-&nbsp; }<br>
-&lt;/style&gt;<br>
-&lt;/head&gt;<br>
-&lt;body&gt;<br>
-&nbsp; &lt;!-- Canvas for Matrix rain --&gt;<br>
-&nbsp; &lt;canvas id="matrixCanvas"&gt;&lt;/canvas&gt;<br>
-<br>
-&nbsp; &lt;div class="app"&gt;<br>
-&nbsp;&nbsp;&nbsp; &lt;h1&gt;CYBERSECURITY MATRIX QUIZ&lt;/h1&gt;<br>
-&nbsp;&nbsp;&nbsp; &lt;p class="muted" style="text-align:center;color:var(--muted);"&gt;Decide if each statement is TRUE or FALSE.&lt;/p&gt;<br>
-<br>
-&nbsp;&nbsp;&nbsp; &lt;div id="namePrompt"&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;h3 style="text-align:center;color:var(--accent);"&gt;Enter your hacker alias:&lt;/h3&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;input id="userName" placeholder="Anonymous..." autocomplete="off"&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;button id="startBtn" class="btn primary" style="margin-top:10px;width:100%;"&gt;INITIATE QUIZ&lt;/button&gt;<br>
-&nbsp;&nbsp;&nbsp; &lt;/div&gt;<br>
-<br>
-&nbsp;&nbsp;&nbsp; &lt;div class="progress-section hidden" id="progressSection"&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;div id="progressText" class="progress-text"&gt;&lt;/div&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;div class="progress-container"&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;div id="progressBar" class="progress-bar"&gt;&lt;/div&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/div&gt;<br>
-&nbsp;&nbsp;&nbsp; &lt;/div&gt;<br>
-<br>
-&nbsp;&nbsp;&nbsp; &lt;div id="quizArea" class="hidden"&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;div id="question" class="question"&gt;&lt;/div&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;div class="choices"&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;button id="btnTrue" class="btn"&gt;TRUE&lt;/button&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;button id="btnFalse" class="btn"&gt;FALSE&lt;/button&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/div&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;div id="feedback" class="feedback"&gt;&lt;/div&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;div style="text-align:center;margin-top:15px;"&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;button id="nextBtn" class="btn primary" style="display:none;"&gt;NEXT &#10140;&lt;/button&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/div&gt;<br>
-&nbsp;&nbsp;&nbsp; &lt;/div&gt;<br>
-<br>
-&nbsp;&nbsp;&nbsp; &lt;div id="summary" class="fade-in"&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;h2&gt;QUIZ COMPLETE &#129504;&lt;/h2&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;p id="scoreText"&gt;&lt;/p&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;div id="rating"&gt;&lt;/div&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;p id="saveStatus" style="margin-top:10px;color:var(--muted);"&gt;&lt;/p&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;button id="restartBtn" class="btn primary" style="margin-top:15px;"&gt;RESTART&lt;/button&gt;<br>
-&nbsp;&nbsp;&nbsp; &lt;/div&gt;<br>
-<br>
-&nbsp;&nbsp;&nbsp; &lt;div class="footer"&gt;SYSTEM LOG: results auto-saved to Google Sheet (admin only)&lt;/div&gt;<br>
-&nbsp; &lt;/div&gt;<br>
-<br>
-&lt;script&gt;<br>
-/* ---------------------------<br>
-&nbsp;&nbsp; Matrix Rain Canvas Script<br>
-&nbsp;&nbsp; ---------------------------<br>
-&nbsp;&nbsp; - Adjust 'symbolSize', 'spawnRate', and 'speedFactor' below to tune look.<br>
-&nbsp;&nbsp; - Canvas is overlayed and pointer-events are disabled so UI stays interactive.<br>
-*/<br>
-(function matrixRain(){<br>
-&nbsp; const canvas = document.getElementById('matrixCanvas');<br>
-&nbsp; const ctx = canvas.getContext('2d', {alpha: true});<br>
-<br>
-&nbsp; // Settings &#8212; tweak these to change density/speed/size<br>
-&nbsp; let symbolSize = 18;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // font size in px<br>
-&nbsp; let spawnRate = 0.95;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // probability each column spawns a new drop (0..1). Lower =&gt; fewer columns active<br>
-&nbsp; let speedFactor = 0.6;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // global speed multiplier (0.2 slow, 1 normal, 2 fast)<br>
-&nbsp; let fadeAlpha = 0.05;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // trail fade (0..1). Lower =&gt; longer trails<br>
-<br>
-&nbsp; const chars = '&#12450;&#12449;&#12459;&#12469;&#12479;&#12490;&#12495;&#12510;&#12516;&#12515;&#12521;&#12527;&#12460;&#12470;&#12480;&#12496;&#12497;&#12452;&#12451;&#12461;&#12471;&#12481;&#12491;&#12498;&#12511;&#12522;&#12528;&#12462;&#12472;&#12482;&#12499;&#12500;&#12454;&#12453;&#12463;&#12473;&#12484;&#12492;&#12501;&#12512;&#12518;&#12517;&#12523;&#12464;&#12474;&#12485;&#12502;&#12503;&#12456;&#12455;&#12465;&#12475;&#12486;&#12493;&#12504;&#12513;&#12524;&#12529;&#12466;&#12476;&#12487;&#12505;&#12506;&#12458;&#12457;&#12467;&#12477;&#12488;&#12494;&#12507;&#12514;&#12520;&#12519;&#12525;&#12468;&#12478;&#12489;&#12508;&#12509;0123456789@#$%&amp;*+-=&lt;&gt;';<br>
-<br>
-&nbsp; let width, height, columns, drops;<br>
-<br>
-&nbsp; function resize(){<br>
-&nbsp;&nbsp;&nbsp; width = canvas.width = window.innerWidth;<br>
-&nbsp;&nbsp;&nbsp; height = canvas.height = window.innerHeight;<br>
-&nbsp;&nbsp;&nbsp; columns = Math.floor(width / symbolSize);<br>
-&nbsp;&nbsp;&nbsp; drops = new Array(columns).fill(0).map(() =&gt; ({<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; y: Math.floor(Math.random()*-1000), // random start above screen<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; speed: (Math.random()*0.9 + 0.6) * (symbolSize * speedFactor)<br>
-&nbsp;&nbsp;&nbsp; }));<br>
-&nbsp;&nbsp;&nbsp; ctx.font = `${symbolSize}px monospace`;<br>
-&nbsp; }<br>
-&nbsp; window.addEventListener('resize', resize, {passive:true});<br>
-&nbsp; resize();<br>
-<br>
-&nbsp; // Draw loop<br>
-&nbsp; function draw(){<br>
-&nbsp;&nbsp;&nbsp; // fade background slightly to create trail<br>
-&nbsp;&nbsp;&nbsp; ctx.fillStyle = `rgba(0, 0, 0, ${fadeAlpha})`;<br>
-&nbsp;&nbsp;&nbsp; ctx.fillRect(0,0,width,height);<br>
-<br>
-&nbsp;&nbsp;&nbsp; // bright header glow occasionally<br>
-&nbsp;&nbsp;&nbsp; for (let i=0;i&lt;columns;i++){<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // randomly decide if this column is active (spawnRate)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (Math.random() &gt; spawnRate &amp;&amp; drops[i].y &lt; 0) {<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // keep it quiet (helps density tuning)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; continue;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const x = i * symbolSize;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const drop = drops[i];<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // set color gradient: bright head, faded tail<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const headChance = Math.random();<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // head glyph (brighter, larger alpha)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ctx.fillStyle = `rgba(0,255,120,${0.95})`;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const glyph = chars.charAt(Math.floor(Math.random() * chars.length));<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ctx.fillText(glyph, x, drop.y);<br>
-<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // draw a secondary faint glyph slightly above for visual depth<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ctx.fillStyle = `rgba(0,200,100,0.35)`;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const glyph2 = chars.charAt(Math.floor(Math.random() * chars.length));<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ctx.fillText(glyph2, x, drop.y - symbolSize);<br>
-<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // step the drop<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; drop.y += drop.speed;<br>
-<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // wrap and randomize speed when it leaves bottom<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (drop.y &gt; height + Math.random() * 1000){<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; drop.y = -Math.random() * 1000;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; drop.speed = (Math.random()*0.9 + 0.6) * (symbolSize * speedFactor);<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
-&nbsp;&nbsp;&nbsp; }<br>
-&nbsp;&nbsp;&nbsp; requestAnimationFrame(draw);<br>
-&nbsp; }<br>
-<br>
-&nbsp; // Improve crispness on HiDPI screens<br>
-&nbsp; function fixDPR(){<br>
-&nbsp;&nbsp;&nbsp; const dpr = window.devicePixelRatio || 1;<br>
-&nbsp;&nbsp;&nbsp; canvas.width = Math.floor(window.innerWidth * dpr);<br>
-&nbsp;&nbsp;&nbsp; canvas.height = Math.floor(window.innerHeight * dpr);<br>
-&nbsp;&nbsp;&nbsp; canvas.style.width = window.innerWidth + 'px';<br>
-&nbsp;&nbsp;&nbsp; canvas.style.height = window.innerHeight + 'px';<br>
-&nbsp;&nbsp;&nbsp; ctx.setTransform(dpr,0,0,dpr,0,0);<br>
-&nbsp;&nbsp;&nbsp; ctx.font = `${symbolSize}px monospace`;<br>
-&nbsp; }<br>
-&nbsp; window.addEventListener('resize', () =&gt; { fixDPR(); resize(); }, {passive:true});<br>
-&nbsp; fixDPR();<br>
-<br>
-&nbsp; // Start<br>
-&nbsp; requestAnimationFrame(draw);<br>
-<br>
-&nbsp; // Optional: expose a global setter for quick runtime tweaks (for dev)<br>
-&nbsp; window._matrixSettings = {<br>
-&nbsp;&nbsp;&nbsp; setSize: s =&gt; { symbolSize = s; fixDPR(); resize(); },<br>
-&nbsp;&nbsp;&nbsp; setDensity: r =&gt; { spawnRate = r; },<br>
-&nbsp;&nbsp;&nbsp; setSpeed: v =&gt; { speedFactor = v; }<br>
-&nbsp; };<br>
-})();<br>
-<br>
-/* ---------------------------<br>
-&nbsp;&nbsp; Quiz logic (unchanged)<br>
-&nbsp;&nbsp; --------------------------- */<br>
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbwUsuf9SESCtU-UgWBCFDsk94MQfdVu6EnEga4RAkb5XmK_xRGCjC6xnIvEqL-3S2Gt/exec";<br>
-<br>
-const questions = [<br>
-&nbsp; {q:"Using the same password for multiple accounts is safe if it&#8217;s very complex.",a:false,e:"Reusing passwords creates a single point of failure &#8212; one leak compromises all."},<br>
-&nbsp; {q:"Public Wi-Fi networks can expose your traffic to interception.",a:true,e:"Attackers can capture unencrypted data over open networks."},<br>
-&nbsp; {q:"Phishing attacks rely on emotional manipulation, not code exploits.",a:true,e:"They use fear, urgency, or greed to make you click or share info."},<br>
-&nbsp; {q:"Two-factor authentication (2FA) drastically improves account security.",a:true,e:"Even stolen passwords become useless without the second factor."},<br>
-&nbsp; {q:"Cracked software is harmless if scanned with antivirus first.",a:false,e:"Pirated apps often include hidden trojans or keyloggers."},<br>
-&nbsp; {q:"A padlock icon in the browser means the website is completely safe.",a:false,e:"It only means the connection is encrypted &#8212; scams can still wear that lock."},<br>
-&nbsp; {q:"Hackers often use social engineering instead of technical exploits.",a:true,e:"The human brain is the easiest system to hack."},<br>
-&nbsp; {q:"Leaving Bluetooth or AirDrop enabled constantly is risk-free.",a:false,e:"Attackers can exploit open connections for data access or tracking."},<br>
-&nbsp; {q:"Strong passwords mix upper and lowercase, numbers, and symbols.",a:true,e:"Entropy matters &#8212; randomness equals resistance."},<br>
-&nbsp; {q:"Ethical hackers use the same tools as black-hat hackers &#8212; legally.",a:true,e:"The difference is permission and intent, not technique."}<br>
-];<br>
-<br>
-let idx = 0, score = 0, userName = "", userAnswers = [];<br>
-const qEl = document.getElementById('question');<br>
-const feedback = document.getElementById('feedback');<br>
-const btnT = document.getElementById('btnTrue');<br>
-const btnF = document.getElementById('btnFalse');<br>
-const nextBtn = document.getElementById('nextBtn');<br>
-const summary = document.getElementById('summary');<br>
-const scoreText = document.getElementById('scoreText');<br>
-const ratingEl = document.getElementById('rating');<br>
-const restartBtn = document.getElementById('restartBtn');<br>
-const quizArea = document.getElementById('quizArea');<br>
-const progressBar = document.getElementById('progressBar');<br>
-const progressText = document.getElementById('progressText');<br>
-const namePrompt = document.getElementById('namePrompt');<br>
-const progressSection = document.getElementById('progressSection');<br>
-const saveStatus = document.getElementById('saveStatus');<br>
-const startBtn = document.getElementById('startBtn');<br>
-<br>
-startBtn.onclick = () =&gt; {<br>
-&nbsp; userName = document.getElementById('userName').value.trim();<br>
-&nbsp; if(!userName) return alert("Access denied: Enter alias first.");<br>
-&nbsp; namePrompt.classList.add('hidden');<br>
-&nbsp; quizArea.classList.remove('hidden');<br>
-&nbsp; progressSection.classList.remove('hidden');<br>
-&nbsp; renderQuestion();<br>
-};<br>
-<br>
-function renderQuestion(){<br>
-&nbsp; const q = questions[idx];<br>
-&nbsp; qEl.textContent = (idx+1) + ". " + q.q;<br>
-&nbsp; feedback.textContent = "";<br>
-&nbsp; btnT.disabled = btnF.disabled = false;<br>
-&nbsp; nextBtn.style.display = "none";<br>
-&nbsp; updateProgress();<br>
-}<br>
-<br>
-function updateProgress(){<br>
-&nbsp; const percent = ((idx)/questions.length)*100;<br>
-&nbsp; progressBar.style.width = percent + "%";<br>
-&nbsp; progressText.textContent = `Question ${idx+1} of ${questions.length}`;<br>
-}<br>
-<br>
-function answer(isTrue){<br>
-&nbsp; const q = questions[idx];<br>
-&nbsp; const correct = q.a === isTrue;<br>
-&nbsp; userAnswers.push({question:q.q, answer:isTrue, correct});<br>
-&nbsp; btnT.disabled = btnF.disabled = true;<br>
-&nbsp; feedback.textContent = (correct?"&#10004; ACCESS GRANTED &#8212; ":"&#10006; ACCESS DENIED &#8212; ") + q.e;<br>
-&nbsp; feedback.className = "feedback " + (correct?"correct":"wrong");<br>
-&nbsp; nextBtn.style.display = "inline-block";<br>
-&nbsp; if(correct) score++;<br>
-}<br>
-<br>
-function next(){<br>
-&nbsp; idx++;<br>
-&nbsp; if(idx&gt;=questions.length){<br>
-&nbsp;&nbsp;&nbsp; progressBar.style.width = "100%";<br>
-&nbsp;&nbsp;&nbsp; showSummary();<br>
-&nbsp; }else renderQuestion();<br>
-}<br>
-<br>
-function showSummary(){<br>
-&nbsp; quizArea.style.display = "none";<br>
-&nbsp; summary.style.display = "block";<br>
-&nbsp; const percent = Math.round((score/questions.length)*100);<br>
-&nbsp; scoreText.textContent = `${userName}, you scored ${score}/${questions.length} (${percent}%)`;<br>
-&nbsp; let rating="";<br>
-&nbsp; if(percent&gt;=80){rating="&gt;&gt;&gt; STATUS: ELITE HACKER &#129001;";ratingEl.className="excellent";}<br>
-&nbsp; else if(percent&gt;=50){rating="&gt;&gt;&gt; STATUS: INTERMEDIATE &#128310;";ratingEl.className="good";}<br>
-&nbsp; else{rating="&gt;&gt;&gt; STATUS: RECRUIT &#128308;";ratingEl.className="tryagain";}<br>
-&nbsp; ratingEl.textContent = rating;<br>
-&nbsp; progressText.textContent = "SYSTEM: Quiz Complete &#129504;";<br>
-<br>
-&nbsp; fetch(SHEET_URL, {<br>
-&nbsp;&nbsp;&nbsp; method: "POST",<br>
-&nbsp;&nbsp;&nbsp; headers: {"Content-Type":"application/json"},<br>
-&nbsp;&nbsp;&nbsp; body: JSON.stringify({<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; name: userName,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; score: score,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; total: questions.length,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; percent: percent,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; answers: userAnswers<br>
-&nbsp;&nbsp;&nbsp; })<br>
-&nbsp; })<br>
-&nbsp; .then(res =&gt; res.json())<br>
-&nbsp; .then(d =&gt; saveStatus.textContent = "&#10004; Logs transmitted successfully")<br>
-&nbsp; .catch(err =&gt; {<br>
-&nbsp;&nbsp;&nbsp; console.error(err);<br>
-&nbsp;&nbsp;&nbsp; saveStatus.textContent = "&#9888; Transmission failed. Check Google Script config.";<br>
-&nbsp; });<br>
-}<br>
-<br>
-function restartQuiz(){<br>
-&nbsp; idx=0;score=0;userAnswers=[];<br>
-&nbsp; summary.style.display="none";<br>
-&nbsp; quizArea.style.display="block";<br>
-&nbsp; renderQuestion();<br>
-}<br>
-<br>
-btnT.onclick=()=&gt;answer(true);<br>
-btnF.onclick=()=&gt;answer(false);<br>
-nextBtn.onclick=next;<br>
-restartBtn.onclick=restartQuiz;<br>
-&lt;/script&gt;<br>
-&lt;/body&gt;<br>
-&lt;/html&gt;<br>
-</div>
+<body>
+  <canvas id="matrixCanvas"></canvas>
+
+  <div class="app">
+    <h1>CYBERSECURITY MATRIX QUIZ</h1>
+    <p class="muted" style="text-align:center;color:var(--muted);">Decide if each statement is TRUE or FALSE.</p>
+
+    <div id="namePrompt">
+      <h3 style="text-align:center;color:var(--accent);">Enter your hacker alias:</h3>
+      <input id="userName" placeholder="Anonymous..." autocomplete="off">
+      <button id="startBtn" class="btn primary" style="margin-top:10px;width:100%;">INITIATE QUIZ</button>
+    </div>
+
+    <div class="progress-section hidden" id="progressSection">
+      <div id="progressText" class="progress-text"></div>
+      <div class="progress-container">
+        <div id="progressBar" class="progress-bar"></div>
+      </div>
+    </div>
+
+    <div id="quizArea" class="hidden">
+      <div id="question" class="question"></div>
+      <div class="choices">
+        <button id="btnTrue" class="btn">TRUE</button>
+        <button id="btnFalse" class="btn">FALSE</button>
+      </div>
+      <div id="feedback" class="feedback"></div>
+      <div style="text-align:center;margin-top:15px;">
+        <button id="nextBtn" class="btn primary" style="display:none;">NEXT ➜</button>
+      </div>
+    </div>
+
+    <div id="summary" class="fade-in">
+      <h2>QUIZ COMPLETE 🥷</h2>
+      <p id="scoreText"></p>
+      <div id="rating"></div>
+      <p id="saveStatus" style="margin-top:10px;color:var(--muted);"></p>
+      <button id="restartBtn" class="btn primary" style="margin-top:15px;">RESTART</button>
+    </div>
+
+    <div class="footer">SYSTEM LOG: results auto-saved to Google Sheet (admin only)</div>
+  </div>
+
+  <script>
+  // ===== MATRIX RAIN EFFECT =====
+  const canvas = document.getElementById("matrixCanvas");
+  const ctx = canvas.getContext("2d");
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*";
+  const fontSize = 16;
+  const columns = Math.floor(width / fontSize);
+  const drops = Array(columns).fill(1);
+
+  function drawMatrix() {
+    ctx.fillStyle = "rgba(0,0,0,0.08)";
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = "#00ff66";
+    ctx.font = fontSize + "px monospace";
+    for (let i = 0; i < drops.length; i++) {
+      const text = chars.charAt(Math.floor(Math.random() * chars.length));
+      ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+      if (drops[i] * fontSize > height && Math.random() > 0.975) drops[i] = 0;
+      drops[i]++;
+    }
+  }
+  setInterval(drawMatrix, 35);
+  window.addEventListener("resize", () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+
+  // ===== QUIZ LOGIC =====
+  const quizData = [
+    { question: "Using '123456' as a password is secure.", answer: false },
+    { question: "Phishing emails often pretend to be from trusted companies.", answer: true },
+    { question: "Public Wi-Fi networks can be unsafe for sensitive data.", answer: true },
+    { question: "You should share your passwords with coworkers you trust.", answer: false },
+    { question: "Antivirus software helps protect against malware.", answer: true },
+    { question: "Two-factor authentication adds extra security.", answer: true },
+    { question: "Clicking random links is a safe way to test your curiosity.", answer: false },
+    { question: "Using unique passwords for every account increases safety.", answer: true },
+    { question: "Cybersecurity only matters for big companies.", answer: false },
+    { question: "A VPN helps protect your privacy online.", answer: true }
+  ];
+
+  let currentQuestion = 0;
+  let score = 0;
+  let user = "";
+
+  const startBtn = document.getElementById("startBtn");
+  const userName = document.getElementById("userName");
+  const namePrompt = document.getElementById("namePrompt");
+  const quizArea = document.getElementById("quizArea");
+  const questionEl = document.getElementById("question");
+  const btnTrue = document.getElementById("btnTrue");
+  const btnFalse = document.getElementById("btnFalse");
+  const feedbackEl = document.getElementById("feedback");
+  const nextBtn = document.getElementById("nextBtn");
+  const summary = document.getElementById("summary");
+  const scoreText = document.getElementById("scoreText");
+  const rating = document.getElementById("rating");
+  const progressSection = document.getElementById("progressSection");
+  const progressBar = document.getElementById("progressBar");
+  const progressText = document.getElementById("progressText");
+  const restartBtn = document.getElementById("restartBtn");
+
+  startBtn.addEventListener("click", () => {
+    user = userName.value.trim() || "Anonymous";
+    namePrompt.classList.add("hidden");
+    quizArea.classList.remove("hidden");
+    progressSection.classList.remove("hidden");
+    showQuestion();
+  });
+
+  function showQuestion() {
+    const q = quizData[currentQuestion];
+    questionEl.textContent = `Q${currentQuestion + 1}: ${q.question}`;
+    feedbackEl.textContent = "";
+    nextBtn.style.display = "none";
+    progressText.textContent = `Question ${currentQuestion + 1} of ${quizData.length}`;
+    progressBar.style.width = ((currentQuestion / quizData.length) * 100) + "%";
+  }
+
+  function handleAnswer(ans) {
+    const q = quizData[currentQuestion];
+    if (ans === q.answer) {
+      feedbackEl.textContent = "Correct!";
+      feedbackEl.className = "feedback correct";
+      score++;
+    } else {
+      feedbackEl.textContent = "Wrong!";
+      feedbackEl.className = "feedback wrong";
+    }
+    nextBtn.style.display = "inline-block";
+  }
+
+  btnTrue.addEventListener("click", () => handleAnswer(true));
+  btnFalse.addEventListener("click", () => handleAnswer(false));
+
+  nextBtn.addEventListener("click", () => {
+    currentQuestion++;
+    if (currentQuestion < quizData.length) {
+      showQuestion();
+    } else {
+      showSummary();
+    }
+  });
+
+  function showSummary() {
+    quizArea.classList.add("hidden");
+    progressSection.classList.add("hidden");
+    summary.style.display = "block";
+    scoreText.textContent = `${user}, your score is ${score}/${quizData.length}`;
+    const percent = (score / quizData.length) * 100;
+    if (percent >= 90) rating.textContent = "🧠 Excellent hacker instinct!";
+    else if (percent >= 70) rating.textContent = "🔐 Good work, security aware!";
+    else rating.textContent = "⚠️ Needs improvement. Stay vigilant!";
+  }
+
+  restartBtn.addEventListener("click", () => {
+    summary.style.display = "none";
+    currentQuestion = 0;
+    score = 0;
+    namePrompt.classList.remove("hidden");
+  });
+  </script>
 </body>
 </html>
